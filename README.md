@@ -1,7 +1,7 @@
 # Invoice & Report Automation
 
 [![CI](https://github.com/rongali-commits/invoice-report-automation/actions/workflows/ci.yml/badge.svg)](https://github.com/rongali-commits/invoice-report-automation/actions/workflows/ci.yml)
-[Portfolio](https://www.rongalichaitanya.com) · [Discuss a workflow](mailto:hello@rongalichaitanya.com)
+[Live application](https://rongali-commits.github.io/invoice-report-automation/) · [Portfolio](https://www.rongalichaitanya.com) · [Discuss a workflow](mailto:hello@rongalichaitanya.com)
 
 A client-style Python workflow that turns recurring billing CSV files into validated exports, an issue queue, run summaries, and printable PDF invoices.
 
@@ -68,6 +68,7 @@ Accepted statuses are `paid` and `pending`. Invalid rows are never silently disc
 
 ```text
 src/invoice_automation/   validation, output generation, and CLI
+site/                     independently hosted browser edition
 sample_data/              fictional billing records
 tests/                    repeatable pipeline tests
 docs/                     verified screenshot
