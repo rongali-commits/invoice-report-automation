@@ -1,0 +1,8 @@
+invoice_id,client,email,service,amount,status
+INV-1001,Nova Clinics,accounts@nova.example,AI chatbot setup,850,paid
+INV-1002,Peak Realty,finance@peak.example,Lead research workflow,620,pending
+INV-1003,Urban Tutors,ops@urban.example,Monthly report automation,430,paid
+INV-1004,Bright Dental,,Document processing,0,review
+INV-1005,Orbit Studio,team@orbit.example,Content workflow,390,paid
+INV-1006,LedgerWise,billing-at-ledger.example,Spreadsheet cleanup,-12,pending
+
