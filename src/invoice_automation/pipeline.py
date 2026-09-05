@@ -90,7 +90,7 @@ def _read_and_validate(input_path: Path) -> tuple[list[CleanInvoice], list[Issue
                 if amount <= 0:
                     reasons.append("amount must be greater than zero")
             except InvalidOperation:
-                amount = Decimal("0")
+                amount = Decimal(0)
                 reasons.append("amount is not a number")
 
             email = raw["email"].strip().lower()
