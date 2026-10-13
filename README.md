@@ -1,7 +1,7 @@
 # Invoice & Report Automation
 
 [![CI](https://github.com/rongali-commits/invoice-report-automation/actions/workflows/ci.yml/badge.svg)](https://github.com/rongali-commits/invoice-report-automation/actions/workflows/ci.yml)
-[Live application](https://rongali-commits.github.io/invoice-report-automation/) · [Portfolio](https://www.rongalichaitanya.com) · [Discuss a workflow](mailto:hello@rongalichaitanya.com)
+[Live application](https://rongali-commits.github.io/invoice-report-automation/) · [Portfolio](https://noerong.com/projects) · [Discuss a workflow](mailto:hello@noerong.com)
 
 A client-style Python workflow that turns recurring billing CSV files into validated exports, an issue queue, run summaries, and printable PDF invoices.
 
