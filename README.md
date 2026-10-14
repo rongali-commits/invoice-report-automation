@@ -57,6 +57,9 @@ Open `output/dashboard.html` to inspect the run and `output/invoices/` for gener
 
 ## Expected input
 
+See the [Python input and output contract](docs/input-contract.md) for validation,
+filename rules, output-directory reuse and the browser edition's limitations.
+
 ```csv
 invoice_id,client,email,service,amount,status
 INV-1001,Example Company,accounts@example.com,Monthly reporting,850,paid
@@ -77,6 +80,13 @@ docs/                     verified screenshot
 ## Production handoff
 
 For a real engagement I would adapt column mappings, invoice branding, currency and tax rules, delivery channels, and storage to the client's process. Email or cloud uploads would be added behind explicit credentials and an audit log. No client data, secrets, or third-party API keys are included here.
+
+## Contributing and support
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for a working setup, sample expectations and
+checks for the Python and browser editions. Report reproducible problems through
+[GitHub issues](https://github.com/rongali-commits/invoice-report-automation/issues)
+using a small fictional dataset.
 
 ## License
 

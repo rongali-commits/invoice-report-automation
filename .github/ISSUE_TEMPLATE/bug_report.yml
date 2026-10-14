@@ -1,0 +1,41 @@
+name: Bug report
+description: Report a reproducible LedgerFlow problem using fictional data.
+title: "bug: "
+body:
+  - type: dropdown
+    id: edition
+    attributes:
+      label: Edition
+      options:
+        - Python CLI
+        - Browser demo
+        - Both editions
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include the version or commit, operating system and Python or browser version.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps and fictional input
+      description: Provide the smallest input that shows the problem. Replace private billing data with fictional records.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include relevant errors or output and whether the output directory was reused.
+    validations:
+      required: true

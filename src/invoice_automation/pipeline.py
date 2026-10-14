@@ -11,6 +11,12 @@ from pathlib import Path
 REQUIRED_COLUMNS = {"invoice_id", "client", "email", "service", "amount", "status"}
 VALID_STATUSES = {"paid", "pending"}
 EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+UNSAFE_FILENAME_PATTERN = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
+WINDOWS_RESERVED_STEMS = (
+    {"CON", "PRN", "AUX", "NUL", "CONIN$", "CONOUT$"}
+    | {f"COM{number}" for number in "123456789¹²³"}
+    | {f"LPT{number}" for number in "123456789¹²³"}
+)
 
 
 @dataclass(frozen=True)
@@ -83,11 +89,15 @@ def _read_and_validate(input_path: Path) -> tuple[list[CleanInvoice], list[Issue
             raise ValueError(f"Missing required columns: {', '.join(sorted(missing))}")
 
         for row_number, raw in enumerate(reader, start=2):
+            # DictReader uses None for cells missing from a truncated row.
+            raw = {column: raw.get(column) or "" for column in REQUIRED_COLUMNS}
             invoice_id = raw["invoice_id"].strip()
             reasons: list[str] = []
             try:
                 amount = Decimal(raw["amount"].strip())
-                if amount <= 0:
+                if not amount.is_finite():
+                    reasons.append("amount must be finite")
+                elif amount <= 0:
                     reasons.append("amount must be greater than zero")
             except InvalidOperation:
                 amount = Decimal(0)
@@ -98,6 +108,13 @@ def _read_and_validate(input_path: Path) -> tuple[list[CleanInvoice], list[Issue
                 reasons.append("email is missing or invalid")
             if not invoice_id:
                 reasons.append("invoice_id is required")
+            elif (
+                invoice_id in {".", ".."}
+                or UNSAFE_FILENAME_PATTERN.search(invoice_id)
+                or invoice_id.endswith((".", " "))
+                or invoice_id.partition(".")[0].rstrip(" ").upper() in WINDOWS_RESERVED_STEMS
+            ):
+                reasons.append("invoice_id must be a safe filename")
             elif invoice_id in seen_ids:
                 reasons.append("invoice_id is duplicated")
             status = raw["status"].strip().lower()

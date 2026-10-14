@@ -1,0 +1,23 @@
+name: Workflow improvement
+description: Describe a real workflow problem and a proposed improvement.
+title: "feature: "
+body:
+  - type: textarea
+    id: workflow
+    attributes:
+      label: The workflow and current difficulty
+      description: Describe who uses the workflow and where it becomes difficult.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed improvement
+      description: Explain the useful outcome and the edition it should support.
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Fictional example or alternatives
+      description: Include a small synthetic example when it helps explain the need.
