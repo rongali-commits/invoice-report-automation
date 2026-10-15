@@ -1,0 +1,1283 @@
+[
+  {
+    "name": "quoted_bom_and_normalization",
+    "csv": "﻿invoice_id,client,email,service,amount,status\r\n Q-1 ,\" Company, \"\"Inc\"\" \", ACCOUNTS@Example.COM ,\"First line\r\nSecond line\",1.005, PaID \r\nQ-2,Example,a@example.com,Reporting,2.675,paid\r\n",
+    "clean": [
+      {
+        "invoice_id": "Q-1",
+        "client": "Company, \"Inc\"",
+        "email": "accounts@example.com",
+        "service": "First line\r\nSecond line",
+        "amount": "1.00",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "Q-2",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "2.68",
+        "status": "paid"
+      }
+    ],
+    "issues": [],
+    "total": "3.68"
+  },
+  {
+    "name": "accepted_ids_case_insensitive",
+    "csv": "invoice_id,client,email,service,amount,status\r\nINV-1,Example,bad,Reporting,1,paid\r\ninv-1,Example,a@example.com,Reporting,2,paid\r\nINV-1,Example,a@example.com,Reporting,3,paid\r\nOther,Example,a@example.com,Reporting,4,paid\r\n",
+    "clean": [
+      {
+        "invoice_id": "inv-1",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "2.00",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "Other",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "4.00",
+        "status": "paid"
+      }
+    ],
+    "issues": [
+      {
+        "row_number": 2,
+        "invoice_id": "INV-1",
+        "reason": "email is missing or invalid"
+      },
+      {
+        "row_number": 4,
+        "invoice_id": "INV-1",
+        "reason": "invoice_id is duplicated"
+      }
+    ],
+    "total": "6.00"
+  },
+  {
+    "name": "decimal_rounding_and_boundaries",
+    "csv": "invoice_id,client,email,service,amount,status\r\nA-0,Example,a@example.com,Reporting,1.005,paid\r\nA-1,Example,a@example.com,Reporting,1.015,paid\r\nA-2,Example,a@example.com,Reporting,2.675,paid\r\nA-3,Example,a@example.com,Reporting,2.005,paid\r\nA-4,Example,a@example.com,Reporting,0.005,paid\r\nA-5,Example,a@example.com,Reporting,0.015,paid\r\nA-6,Example,a@example.com,Reporting,1.245,paid\r\nA-7,Example,a@example.com,Reporting,1.255,paid\r\nA-8,Example,a@example.com,Reporting,1.245e0,paid\r\nA-9,Example,a@example.com,Reporting,1005e-3,paid\r\nA-10,Example,a@example.com,Reporting,+1e1,paid\r\nA-11,Example,a@example.com,Reporting,.006,paid\r\nA-12,Example,a@example.com,Reporting,999999999999.99,paid\r\nA-13,Example,a@example.com,Reporting,999999999999.9901,paid\r\nA-14,Example,a@example.com,Reporting,1000000000000,paid\r\nA-15,Example,a@example.com,Reporting,0,paid\r\nA-16,Example,a@example.com,Reporting,-1,paid\r\nA-17,Example,a@example.com,Reporting,1e-1000,paid\r\nA-18,Example,a@example.com,Reporting,1e1000,paid\r\nA-19,Example,a@example.com,Reporting,1e1001,paid\r\nA-20,Example,a@example.com,Reporting,1e-1001,paid\r\nA-21,Example,a@example.com,Reporting,NaN,paid\r\nA-22,Example,a@example.com,Reporting,sNaN,paid\r\nA-23,Example,a@example.com,Reporting,Infinity,paid\r\nA-24,Example,a@example.com,Reporting,-Infinity,paid\r\nA-25,Example,a@example.com,Reporting,0x10,paid\r\nA-26,Example,a@example.com,Reporting,1_000,paid\r\nA-27,Example,a@example.com,Reporting,12oops,paid\r\nA-28,Example,a@example.com,Reporting,1e99999999999999999999999999999999,paid\r\n",
+    "clean": [
+      {
+        "invoice_id": "A-0",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "1.00",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "A-1",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "1.02",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "A-2",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "2.68",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "A-3",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "2.00",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "A-5",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "0.02",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "A-6",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "1.24",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "A-7",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "1.26",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "A-8",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "1.24",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "A-9",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "1.00",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "A-10",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "10.00",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "A-11",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "0.01",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "A-12",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      }
+    ],
+    "issues": [
+      {
+        "row_number": 6,
+        "invoice_id": "A-4",
+        "reason": "amount must round to at least USD 0.01"
+      },
+      {
+        "row_number": 15,
+        "invoice_id": "A-13",
+        "reason": "amount must not exceed USD 999999999999.99"
+      },
+      {
+        "row_number": 16,
+        "invoice_id": "A-14",
+        "reason": "amount must not exceed USD 999999999999.99"
+      },
+      {
+        "row_number": 17,
+        "invoice_id": "A-15",
+        "reason": "amount must be greater than zero"
+      },
+      {
+        "row_number": 18,
+        "invoice_id": "A-16",
+        "reason": "amount must be greater than zero"
+      },
+      {
+        "row_number": 19,
+        "invoice_id": "A-17",
+        "reason": "amount must round to at least USD 0.01"
+      },
+      {
+        "row_number": 20,
+        "invoice_id": "A-18",
+        "reason": "amount must not exceed USD 999999999999.99"
+      },
+      {
+        "row_number": 21,
+        "invoice_id": "A-19",
+        "reason": "amount exponent must be between -1000 and 1000"
+      },
+      {
+        "row_number": 22,
+        "invoice_id": "A-20",
+        "reason": "amount exponent must be between -1000 and 1000"
+      },
+      {
+        "row_number": 23,
+        "invoice_id": "A-21",
+        "reason": "amount must be finite"
+      },
+      {
+        "row_number": 24,
+        "invoice_id": "A-22",
+        "reason": "amount must be finite"
+      },
+      {
+        "row_number": 25,
+        "invoice_id": "A-23",
+        "reason": "amount must be finite"
+      },
+      {
+        "row_number": 26,
+        "invoice_id": "A-24",
+        "reason": "amount must be finite"
+      },
+      {
+        "row_number": 27,
+        "invoice_id": "A-25",
+        "reason": "amount is not a number"
+      },
+      {
+        "row_number": 28,
+        "invoice_id": "A-26",
+        "reason": "amount is not a number"
+      },
+      {
+        "row_number": 29,
+        "invoice_id": "A-27",
+        "reason": "amount is not a number"
+      },
+      {
+        "row_number": 30,
+        "invoice_id": "A-28",
+        "reason": "amount exponent must be between -1000 and 1000"
+      }
+    ],
+    "total": "1000000000021.46"
+  },
+  {
+    "name": "two_half_cent_lines",
+    "csv": "invoice_id,client,email,service,amount,status\r\nHALF-1,Example,a@example.com,Reporting,1.005,paid\r\nHALF-2,Example,a@example.com,Reporting,2.005,paid\r\n",
+    "clean": [
+      {
+        "invoice_id": "HALF-1",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "1.00",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "HALF-2",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "2.00",
+        "status": "paid"
+      }
+    ],
+    "issues": [],
+    "total": "3.00"
+  },
+  {
+    "name": "total_beyond_js_safe_integer_cents",
+    "csv": "invoice_id,client,email,service,amount,status\r\nMAX-0,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-1,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-2,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-3,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-4,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-5,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-6,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-7,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-8,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-9,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-10,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-11,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-12,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-13,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-14,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-15,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-16,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-17,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-18,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-19,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-20,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-21,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-22,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-23,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-24,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-25,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-26,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-27,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-28,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-29,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-30,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-31,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-32,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-33,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-34,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-35,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-36,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-37,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-38,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-39,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-40,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-41,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-42,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-43,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-44,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-45,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-46,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-47,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-48,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-49,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-50,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-51,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-52,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-53,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-54,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-55,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-56,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-57,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-58,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-59,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-60,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-61,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-62,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-63,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-64,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-65,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-66,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-67,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-68,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-69,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-70,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-71,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-72,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-73,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-74,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-75,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-76,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-77,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-78,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-79,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-80,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-81,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-82,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-83,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-84,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-85,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-86,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-87,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-88,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-89,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-90,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-91,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-92,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-93,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-94,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-95,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-96,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-97,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-98,Example,a@example.com,Reporting,999999999999.99,paid\r\nMAX-99,Example,a@example.com,Reporting,999999999999.99,paid\r\n",
+    "clean": [
+      {
+        "invoice_id": "MAX-0",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-1",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-2",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-3",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-4",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-5",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-6",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-7",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-8",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-9",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-10",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-11",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-12",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-13",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-14",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-15",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-16",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-17",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-18",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-19",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-20",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-21",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-22",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-23",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-24",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-25",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-26",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-27",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-28",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-29",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-30",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-31",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-32",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-33",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-34",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-35",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-36",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-37",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-38",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-39",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-40",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-41",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-42",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-43",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-44",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-45",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-46",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-47",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-48",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-49",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-50",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-51",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-52",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-53",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-54",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-55",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-56",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-57",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-58",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-59",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-60",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-61",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-62",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-63",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-64",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-65",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-66",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-67",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-68",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-69",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-70",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-71",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-72",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-73",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-74",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-75",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-76",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-77",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-78",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-79",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-80",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-81",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-82",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-83",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-84",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-85",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-86",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-87",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-88",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-89",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-90",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-91",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-92",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-93",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-94",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-95",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-96",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-97",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-98",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "MAX-99",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "999999999999.99",
+        "status": "paid"
+      }
+    ],
+    "issues": [],
+    "total": "99999999999999.00"
+  },
+  {
+    "name": "missing_extra_and_blank_records",
+    "csv": "invoice_id,client,email,service,amount,status\r\nGOOD,Example,a@example.com,Reporting,2,paid\r\n\r\n\"\"\r\n,,,,,\r\nSHORT,Example,a@example.com,Reporting,1\r\nEXTRA,Example,a@example.com,Reporting,3,paid,unexpected\r\nLAST,Example,a@example.com,Reporting,4,paid\r\n",
+    "clean": [
+      {
+        "invoice_id": "GOOD",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "2.00",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "LAST",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "4.00",
+        "status": "paid"
+      }
+    ],
+    "issues": [
+      {
+        "row_number": 3,
+        "invoice_id": "",
+        "reason": "amount is not a number; email is missing or invalid; invoice_id is required; status must be paid or pending; client and service are required"
+      },
+      {
+        "row_number": 4,
+        "invoice_id": "",
+        "reason": "amount is not a number; email is missing or invalid; invoice_id is required; status must be paid or pending; client and service are required"
+      },
+      {
+        "row_number": 5,
+        "invoice_id": "SHORT",
+        "reason": "status must be paid or pending"
+      },
+      {
+        "row_number": 6,
+        "invoice_id": "EXTRA",
+        "reason": "row has more cells than header"
+      }
+    ],
+    "total": "6.00"
+  },
+  {
+    "name": "safe_text_and_formula_export",
+    "csv": "invoice_id,client,email,service,amount,status\r\nSAFE,<img src=x onerror=alert(1)>,a@example.com,\"=HYPERLINK(\"\"https://example.com\"\")\",2.00,paid\r\n+ID,@client,a@example.com,-service,1,paid\r\n",
+    "clean": [
+      {
+        "invoice_id": "SAFE",
+        "client": "<img src=x onerror=alert(1)>",
+        "email": "a@example.com",
+        "service": "=HYPERLINK(\"https://example.com\")",
+        "amount": "2.00",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "+ID",
+        "client": "@client",
+        "email": "a@example.com",
+        "service": "-service",
+        "amount": "1.00",
+        "status": "paid"
+      }
+    ],
+    "issues": [],
+    "total": "3.00"
+  },
+  {
+    "name": "filename_safety",
+    "csv": "invoice_id,client,email,service,amount,status\r\n../escape,Example,a@example.com,Reporting,1,paid\r\nCON.txt,Example,a@example.com,Reporting,1,paid\r\nbad|id,Example,a@example.com,Reporting,1,paid\r\n客户 2026.10,Example,a@example.com,Reporting,1,paid\r\n",
+    "clean": [
+      {
+        "invoice_id": "客户 2026.10",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "1.00",
+        "status": "paid"
+      }
+    ],
+    "issues": [
+      {
+        "row_number": 2,
+        "invoice_id": "../escape",
+        "reason": "invoice_id must be a safe filename"
+      },
+      {
+        "row_number": 3,
+        "invoice_id": "CON.txt",
+        "reason": "invoice_id must be a safe filename"
+      },
+      {
+        "row_number": 4,
+        "invoice_id": "bad|id",
+        "reason": "invoice_id must be a safe filename"
+      }
+    ],
+    "total": "1.00"
+  },
+  {
+    "name": "extra_named_column_and_reordered_headers",
+    "csv": "note,status,amount,service,email,client,invoice_id\r\nignored,paid,2,Reporting,A@Example.com,Example,ORDER\r\n",
+    "clean": [
+      {
+        "invoice_id": "ORDER",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "2.00",
+        "status": "paid"
+      }
+    ],
+    "issues": [],
+    "total": "2.00"
+  },
+  {
+    "name": "missing_headers",
+    "csv": "client,amount\nExample,1\n",
+    "error": "Missing required columns"
+  },
+  {
+    "name": "duplicate_headers",
+    "csv": "invoice_id,client,email,service,amount,status,amount\n",
+    "error": "Duplicate column names"
+  },
+  {
+    "name": "unterminated_quote",
+    "csv": "invoice_id,client,email,service,amount,status\nID,\"Unfinished\n",
+    "error": "Malformed CSV"
+  },
+  {
+    "name": "text_after_quote",
+    "csv": "invoice_id,client,email,service,amount,status\nID,\"Company\"oops,a@example.com,Work,1,paid\n",
+    "error": "Malformed CSV"
+  },
+  {
+    "name": "invoice_id_byte_length",
+    "csv": "invoice_id,client,email,service,amount,status\r\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA,Example,a@example.com,Reporting,1,paid\r\n界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界ab,Example,a@example.com,Reporting,1,paid\r\nBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB,Example,a@example.com,Reporting,1,paid\r\n界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界,Example,a@example.com,Reporting,1,paid\r\n",
+    "clean": [
+      {
+        "invoice_id": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "1.00",
+        "status": "paid"
+      },
+      {
+        "invoice_id": "界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界ab",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "1.00",
+        "status": "paid"
+      }
+    ],
+    "issues": [
+      {
+        "row_number": 4,
+        "invoice_id": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+        "reason": "invoice_id must be at most 251 UTF-8 bytes"
+      },
+      {
+        "row_number": 5,
+        "invoice_id": "界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界",
+        "reason": "invoice_id must be at most 251 UTF-8 bytes"
+      }
+    ],
+    "total": "2.00",
+    "validation_only": true
+  },
+  {
+    "name": "oversized_id_recovery",
+    "csv": "invoice_id,client,email,service,amount,status\r\nAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA,Example,a@example.com,Reporting,1,paid\r\n界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界,Example,a@example.com,Reporting,1,paid\r\nRECOVER,Example,a@example.com,Reporting,1,paid\r\n",
+    "clean": [
+      {
+        "invoice_id": "RECOVER",
+        "client": "Example",
+        "email": "a@example.com",
+        "service": "Reporting",
+        "amount": "1.00",
+        "status": "paid"
+      }
+    ],
+    "issues": [
+      {
+        "row_number": 2,
+        "invoice_id": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "reason": "invoice_id must be at most 251 UTF-8 bytes"
+      },
+      {
+        "row_number": 3,
+        "invoice_id": "界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界",
+        "reason": "invoice_id must be at most 251 UTF-8 bytes"
+      }
+    ],
+    "total": "1.00"
+  }
+]

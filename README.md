@@ -34,7 +34,7 @@ These are reproducible sample-run measurements, not claims about a real client e
 ## What it delivers
 
 - required-column and row-level validation;
-- normalized email, status, and currency fields;
+- normalized email, status, and currency fields with explicit half-even cent rounding;
 - clean CSV and separate issue queue;
 - one printable PDF per valid invoice;
 - JSON run summary and an HTML operations dashboard;
@@ -59,8 +59,8 @@ Non-empty directories are rejected so previous reports and invoice PDFs stay tog
 
 ## Expected input
 
-See the [Python input and output contract](docs/input-contract.md) for validation,
-filename rules, output-directory reuse and the browser edition's limitations.
+See the [input and output contract](docs/input-contract.md) for the shared CSV,
+duplicate-ID and money rules, filename safety, and edition-specific limits.
 
 ```csv
 invoice_id,client,email,service,amount,status
@@ -75,7 +75,7 @@ Accepted statuses are `paid` and `pending`. Invalid rows are never silently disc
 src/invoice_automation/   validation, output generation, and CLI
 site/                     independently hosted browser edition
 sample_data/              fictional billing records
-tests/                    repeatable pipeline tests
+tests/                    Python and browser tests with shared contract fixtures
 docs/                     verified screenshot
 ```
 
@@ -89,6 +89,11 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for a working setup, sample expectations 
 checks for the Python and browser editions. Report reproducible problems through
 [GitHub issues](https://github.com/rongali-commits/invoice-report-automation/issues)
 using a small fictional dataset.
+
+Try the live browser workflow with fictional billing rows and share which import,
+exception or export step slows you down in
+[GitHub issues](https://github.com/rongali-commits/invoice-report-automation/issues).
+Include expected and actual results so the workflow can be improved and verified.
 
 ## License
 

@@ -5,11 +5,14 @@ import html
 import json
 import re
 from dataclasses import asdict, dataclass
-from decimal import Decimal, InvalidOperation
+from decimal import ROUND_HALF_EVEN, Context, Decimal, localcontext
 from pathlib import Path
 
 REQUIRED_COLUMNS = {"invoice_id", "client", "email", "service", "amount", "status"}
 VALID_STATUSES = {"paid", "pending"}
+AMOUNT_PATTERN = re.compile(r"^[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE]([+-]?[0-9]+))?$")
+NONFINITE_PATTERN = re.compile(r"^[+-]?(?:inf(?:inity)?|s?nan[0-9]*)$", re.IGNORECASE)
+MAX_AMOUNT = Decimal("999999999999.99")
 EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 UNSAFE_FILENAME_PATTERN = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
 WINDOWS_RESERVED_STEMS = (
@@ -42,6 +45,7 @@ class AutomationResult:
     ready_rows: int
     flagged_rows: int
     clean_total: float
+    clean_total_decimal: str
     currency: str
     output_directory: Path
 
@@ -61,7 +65,8 @@ def run_automation(input_path: Path, output_directory: Path) -> AutomationResult
     invoices_directory = output_directory / "invoices"
     invoices_directory.mkdir(exist_ok=True)
 
-    total = sum(Decimal(row.amount) for row in clean_rows)
+    total_cents = sum(int(row.amount.replace(".", "")) for row in clean_rows)
+    total = _format_cents(total_cents)
 
     _write_csv(output_directory / "clean_invoices.csv", clean_rows)
     _write_issues(output_directory / "issues.csv", issues)
@@ -73,6 +78,7 @@ def run_automation(input_path: Path, output_directory: Path) -> AutomationResult
         ready_rows=len(clean_rows),
         flagged_rows=len(issues),
         clean_total=float(total),
+        clean_total_decimal=total,
         currency="USD",
         output_directory=output_directory,
     )
@@ -86,37 +92,78 @@ def run_automation(input_path: Path, output_directory: Path) -> AutomationResult
     return result
 
 
+def _format_cents(cents: int) -> str:
+    return f"{cents // 100}.{cents % 100:02d}"
+
+
+def _normalize_amount(value: str) -> str:
+    text = value.strip()
+    if NONFINITE_PATTERN.fullmatch(text):
+        raise ValueError("amount must be finite")
+    match = AMOUNT_PATTERN.fullmatch(text)
+    if not match:
+        raise ValueError("amount is not a number")
+    exponent = (match.group(1) or "0").lstrip("+-").lstrip("0") or "0"
+    if len(exponent) > 4 or int(exponent) > 1000:
+        raise ValueError("amount exponent must be between -1000 and 1000")
+    amount = Decimal(text)
+    if amount <= 0:
+        raise ValueError("amount must be greater than zero")
+    if amount > MAX_AMOUNT:
+        raise ValueError("amount must not exceed USD 999999999999.99")
+    # Do not inherit a caller's precision or rounding mode. The bounded amount
+    # has at most 14 significant digits once rounded to cents.
+    with localcontext(Context(prec=20, rounding=ROUND_HALF_EVEN)):
+        rounded = amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
+    if rounded == 0:
+        raise ValueError("amount must round to at least USD 0.01")
+    return f"{rounded:.2f}"
+
+
 def _read_and_validate(input_path: Path) -> tuple[list[CleanInvoice], list[Issue]]:
+    try:
+        return _read_records(input_path)
+    except csv.Error as exc:
+        raise ValueError(f"Malformed CSV: {exc}") from None
+
+
+def _read_records(input_path: Path) -> tuple[list[CleanInvoice], list[Issue]]:
     clean_rows: list[CleanInvoice] = []
     issues: list[Issue] = []
     seen_ids: set[str] = set()
 
     with input_path.open(newline="", encoding="utf-8-sig") as handle:
-        reader = csv.DictReader(handle)
-        missing = REQUIRED_COLUMNS - set(reader.fieldnames or [])
+        reader = (cells for cells in csv.reader(handle, strict=True) if cells)
+        headers = next(reader, [])
+        missing = REQUIRED_COLUMNS - set(headers)
         if missing:
             raise ValueError(f"Missing required columns: {', '.join(sorted(missing))}")
+        if len(headers) != len(set(headers)):
+            raise ValueError("Duplicate column names are not allowed")
 
-        for row_number, raw in enumerate(reader, start=2):
-            # DictReader uses None for cells missing from a truncated row.
-            raw = {column: raw.get(column) or "" for column in REQUIRED_COLUMNS}
+        for row_number, cells in enumerate(reader, start=2):
+            extra_cells = len(cells) > len(headers)
+            raw = {
+                column: cells[headers.index(column)] if headers.index(column) < len(cells) else ""
+                for column in REQUIRED_COLUMNS
+            }
             invoice_id = raw["invoice_id"].strip()
             reasons: list[str] = []
+            if extra_cells:
+                reasons.append("row has more cells than header")
             try:
-                amount = Decimal(raw["amount"].strip())
-                if not amount.is_finite():
-                    reasons.append("amount must be finite")
-                elif amount <= 0:
-                    reasons.append("amount must be greater than zero")
-            except InvalidOperation:
-                amount = Decimal(0)
-                reasons.append("amount is not a number")
+                amount = _normalize_amount(raw["amount"])
+            except ValueError as exc:
+                amount = ""
+                reasons.append(str(exc))
 
             email = raw["email"].strip().lower()
             if not EMAIL_PATTERN.match(email):
                 reasons.append("email is missing or invalid")
             if not invoice_id:
                 reasons.append("invoice_id is required")
+            elif len(invoice_id.encode("utf-8")) > 251:
+                reasons.append("invoice_id must be at most 251 UTF-8 bytes")
             elif (
                 invoice_id in {".", ".."}
                 or UNSAFE_FILENAME_PATTERN.search(invoice_id)
@@ -124,7 +171,7 @@ def _read_and_validate(input_path: Path) -> tuple[list[CleanInvoice], list[Issue
                 or invoice_id.partition(".")[0].rstrip(" ").upper() in WINDOWS_RESERVED_STEMS
             ):
                 reasons.append("invoice_id must be a safe filename")
-            elif invoice_id in seen_ids:
+            elif invoice_id.upper() in seen_ids:
                 reasons.append("invoice_id is duplicated")
             status = raw["status"].strip().lower()
             if status not in VALID_STATUSES:
@@ -136,14 +183,14 @@ def _read_and_validate(input_path: Path) -> tuple[list[CleanInvoice], list[Issue
                 issues.append(Issue(row_number, invoice_id, "; ".join(reasons)))
                 continue
 
-            seen_ids.add(invoice_id)
+            seen_ids.add(invoice_id.upper())
             clean_rows.append(
                 CleanInvoice(
                     invoice_id=invoice_id,
                     client=raw["client"].strip(),
                     email=email,
                     service=raw["service"].strip(),
-                    amount=f"{amount:.2f}",
+                    amount=amount,
                     status=status,
                 )
             )
@@ -154,14 +201,28 @@ def _write_csv(path: Path, rows: list[CleanInvoice]) -> None:
     with path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=list(CleanInvoice.__dataclass_fields__))
         writer.writeheader()
-        writer.writerows(asdict(row) for row in rows)
+        writer.writerows(
+            {key: _spreadsheet_text(value) for key, value in asdict(row).items()} for row in rows
+        )
+
+
+def _spreadsheet_text(value: str) -> str:
+    # CSV quoting protects structure; an apostrophe also protects spreadsheet
+    # users from executing a supplied formula when they open the export.
+    return "'" + value if value.lstrip().startswith(("=", "+", "-", "@")) else value
 
 
 def _write_issues(path: Path, issues: list[Issue]) -> None:
     with path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=list(Issue.__dataclass_fields__))
         writer.writeheader()
-        writer.writerows(asdict(issue) for issue in issues)
+        writer.writerows(
+            {
+                key: _spreadsheet_text(value) if isinstance(value, str) else value
+                for key, value in asdict(issue).items()
+            }
+            for issue in issues
+        )
 
 
 def _write_invoice_pdf(path: Path, invoice: CleanInvoice) -> None:
@@ -230,7 +291,7 @@ main{{max-width:1100px;margin:auto}}p{{color:#5f6b80}}.eyebrow{{color:#4f46e5;fo
 .card{{padding:24px}}.card strong{{font-size:34px;display:block}}table{{width:100%;border-collapse:collapse;overflow:hidden}}th,td{{padding:16px;text-align:left;border-bottom:1px solid #edf0f5}}th{{background:#eef2ff;color:#3730a3}}.badge{{background:#dcfce7;color:#166534;padding:5px 9px;border-radius:999px}}.issues{{padding:22px;margin-top:20px}}li{{margin:9px 0}}@media(max-width:700px){{body{{padding:20px}}.stats{{grid-template-columns:1fr}}}}
 </style></head><body><main><div class="eyebrow">AUTOMATION RUN / SAFE SAMPLE DATA</div>
 <h1>Invoice & report automation</h1><p>Validated billing rows, issue tracking, clean exports, and printable PDF invoices.</p>
-<section class="stats"><div class="card"><strong>{result.rows_read}</strong>rows processed</div><div class="card"><strong>{result.ready_rows}</strong>invoice-ready</div><div class="card"><strong>${result.clean_total:,.0f}</strong>validated total</div></section>
+<section class="stats"><div class="card"><strong>{result.rows_read}</strong>rows processed</div><div class="card"><strong>{result.ready_rows}</strong>invoice-ready</div><div class="card"><strong>${Decimal(result.clean_total_decimal):,.2f}</strong>validated total</div></section>
 <table><thead><tr><th>Invoice</th><th>Client</th><th>Service</th><th>Amount</th><th>Status</th></tr></thead><tbody>{invoice_rows}</tbody></table>
 <section class="issues"><h2>{result.flagged_rows} rows require review</h2><ul>{issue_rows}</ul></section>
 </main></body></html>"""

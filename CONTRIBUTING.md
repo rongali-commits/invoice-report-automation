@@ -27,17 +27,23 @@ invoice PDFs. Choose another directory with `--output output-next` for a second 
 
 ## Check the browser edition
 
-The browser edition is a separate implementation in `site/index.html`. It validates
-CSV data and downloads a clean CSV; PDF generation belongs to the Python edition.
-It currently supports a simpler CSV format than Python's parser.
+The browser edition uses `site/ledgerflow.js` for CSV validation and exact cent
+arithmetic, and `site/app.js` for the page. It downloads a clean CSV; PDF generation
+belongs to the Python edition. The editions share regression inputs and expected
+results in `tests/fixtures/contract.json`.
 
 ```sh
+node --test tests/browser.test.cjs
 python -m http.server 8000 --directory site
 ```
 
+Use Node.js 24 or newer for the dependency-free browser tests. These execute the
+browser core and page controller; also check the actual page in a browser.
 Open <http://localhost:8000>. Verify the sample totals, exceptions, editing, sample
-restoration and downloaded CSV. A shared feature needs checks in both editions;
-passing Python tests alone does not verify browser behavior.
+restoration and downloaded CSV. Try quoted commas/newlines, a repeated ID, `1.005`
+and `1.015` amounts, and a missing header after a successful run. Input errors must
+clear the old export. A shared feature needs checks in both editions; passing
+Python tests alone does not verify browser behavior.
 
 ## Report a reproducible problem
 

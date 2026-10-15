@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from decimal import Decimal
 from pathlib import Path
 
 from .pipeline import run_automation
@@ -29,11 +30,11 @@ def main() -> None:
         parser.error(str(exc))
     print(
         f"Processed {result.rows_read} rows: {result.ready_rows} ready, "
-        f"{result.flagged_rows} flagged, total {result.currency} {result.clean_total:,.2f}."
+        f"{result.flagged_rows} flagged, "
+        f"total {result.currency} {Decimal(result.clean_total_decimal):,.2f}."
     )
     print(f"Outputs: {result.output_directory.resolve()}")
 
 
 if __name__ == "__main__":
     main()
-
