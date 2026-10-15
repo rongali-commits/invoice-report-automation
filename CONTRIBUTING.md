@@ -22,8 +22,8 @@ python -m ruff check .
 The fictional sample should produce six processed rows, four invoice-ready rows,
 two flagged rows, a USD 2,290 total and four PDFs. Inspect `output/issues.csv`,
 `output/summary.json` and `output/dashboard.html`. Use a fresh output directory for
-each run: the current implementation keeps PDFs from previous runs in a reused
-directory.
+each run: non-empty directories are rejected to preserve previous reports and
+invoice PDFs. Choose another directory with `--output output-next` for a second run.
 
 ## Check the browser edition
 
@@ -56,7 +56,7 @@ failure and passes with the fix. Preserve the sample results and existing behavi
 outside the intended change. Run the checks above and describe what you verified,
 including any limitations.
 
-Explain the cause and the before/after behavior in the pull request. Credit tools
-that materially helped, review the generated changes and be ready to answer questions.
+Explain the cause and the before/after behavior in the pull request. Review each
+change and be ready to answer questions about the behavior and validation.
 Contributions are reviewed for usefulness and correctness; no one needs to star or
 follow the project to participate.

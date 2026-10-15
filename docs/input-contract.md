@@ -32,9 +32,11 @@ and a PDF under `invoices/` for each accepted record. Inspect the issue queue be
 using the clean export. The sample dataset is fictional and produces six processed
 records, four accepted records, two issues, a USD 2,290 total and four PDFs.
 
-Use a fresh output directory per run. Reusing a directory overwrites the summary
-and CSV files but keeps PDFs for invoices that disappeared from the input. Automatic
-cleanup of obsolete PDFs is not implemented.
+Use a new or empty output directory per run. A non-empty directory is rejected
+before any output is changed, so PDFs from different runs cannot be mixed with a
+new summary or export. Choose another directory, such as `--output output-next`,
+to keep the earlier run. Existing files are never automatically deleted. Missing
+required input columns also fail before output directories are created.
 
 ## Limits
 

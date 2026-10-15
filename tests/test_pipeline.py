@@ -34,6 +34,40 @@ def test_missing_columns_fail_early(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="Missing required columns"):
         run_automation(invalid, tmp_path / "output")
 
+    assert not (tmp_path / "output").exists()
+
+
+def test_output_reuse_preserves_every_file_from_the_previous_run(tmp_path: Path) -> None:
+    source = tmp_path / "input.csv"
+    header = "invoice_id,client,email,service,amount,status\n"
+    source.write_text(header + "OLD,Example,a@example.com,Reporting,10,paid\n", encoding="utf-8")
+    output = tmp_path / "output"
+    run_automation(source, output)
+    before = {
+        path.relative_to(output): path.read_bytes() for path in output.rglob("*") if path.is_file()
+    }
+    source.write_text(header + "NEW,Example,a@example.com,Reporting,20,paid\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="Output directory is not empty"):
+        run_automation(source, output)
+
+    after = {
+        path.relative_to(output): path.read_bytes() for path in output.rglob("*") if path.is_file()
+    }
+    assert after == before
+    assert not (output / "invoices" / "NEW.pdf").exists()
+
+
+def test_output_path_cannot_replace_an_existing_file(tmp_path: Path) -> None:
+    sample = Path(__file__).parents[1] / "sample_data" / "invoices.csv"
+    output = tmp_path / "notes.txt"
+    output.write_text("keep this file", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="Output path is not a directory"):
+        run_automation(sample, output)
+
+    assert output.read_text(encoding="utf-8") == "keep this file"
+
 
 @pytest.mark.parametrize("amount", ["Infinity", "-Infinity", "NaN", "sNaN"])
 def test_nonfinite_amounts_are_queued_without_blocking_valid_rows(
@@ -161,4 +195,3 @@ def test_safe_invoice_ids_generate_pdfs(tmp_path: Path, invoice_id: str) -> None
     assert result.clean_total == 12.50
     pdf = result.output_directory / "invoices" / f"{invoice_id}.pdf"
     assert pdf.read_bytes().startswith(b"%PDF")
-

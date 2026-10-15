@@ -15,14 +15,18 @@ def build_parser() -> argparse.ArgumentParser:
         "--output",
         type=Path,
         default=Path("output"),
-        help="Output directory (default: output)",
+        help="New or empty output directory (default: output)",
     )
     return parser
 
 
 def main() -> None:
-    args = build_parser().parse_args()
-    result = run_automation(args.input, args.output)
+    parser = build_parser()
+    args = parser.parse_args()
+    try:
+        result = run_automation(args.input, args.output)
+    except (OSError, ValueError) as exc:
+        parser.error(str(exc))
     print(
         f"Processed {result.rows_read} rows: {result.ready_rows} ready, "
         f"{result.flagged_rows} flagged, total {result.currency} {result.clean_total:,.2f}."

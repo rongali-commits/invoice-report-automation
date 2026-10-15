@@ -54,6 +54,8 @@ pytest
 ```
 
 Open `output/dashboard.html` to inspect the run and `output/invoices/` for generated PDFs.
+Choose a new or empty output directory for each run, for example `--output output-next`.
+Non-empty directories are rejected so previous reports and invoice PDFs stay together.
 
 ## Expected input
 

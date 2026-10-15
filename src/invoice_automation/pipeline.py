@@ -47,11 +47,20 @@ class AutomationResult:
 
 
 def run_automation(input_path: Path, output_directory: Path) -> AutomationResult:
+    if output_directory.exists():
+        if not output_directory.is_dir():
+            raise ValueError(f"Output path is not a directory: {output_directory}")
+        if any(output_directory.iterdir()):
+            raise ValueError(
+                f"Output directory is not empty: {output_directory}; "
+                "choose a new or empty directory to preserve previous runs."
+            )
+
+    clean_rows, issues = _read_and_validate(input_path)
     output_directory.mkdir(parents=True, exist_ok=True)
     invoices_directory = output_directory / "invoices"
     invoices_directory.mkdir(exist_ok=True)
 
-    clean_rows, issues = _read_and_validate(input_path)
     total = sum(Decimal(row.amount) for row in clean_rows)
 
     _write_csv(output_directory / "clean_invoices.csv", clean_rows)
