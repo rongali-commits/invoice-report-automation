@@ -111,3 +111,99 @@ test('editing invalidates the old download until validation runs again', () => {
 test('exact currency display does not convert large totals to Number', () => {
   assert.equal(core.money(9999999999999900n), '$99,999,999,999,999.00');
 });
+
+test('duplicate guidance identifies the retained invoice and preserves the clean export', async () => {
+  const {nodes, blobs} = page();
+  const csv = [
+    'invoice_id,client,email,service,amount,status',
+    'TRY-100,"Example, Limited",BILLING@EXAMPLE.COM,"Monthly reporting",1.005,PAID',
+    'TRY-101,Example Studio,ops@example.com,Reporting,2.675,pending',
+    'TRY-101,Example Studio,ops@example.com,Duplicate invoice,10,paid',
+  ].join('\n');
+  nodes.get('csv').value = csv;
+  nodes.get('run').click();
+  assert.equal(nodes.get('rows').textContent, '3');
+  assert.equal(nodes.get('ready').textContent, '2');
+  assert.equal(nodes.get('total').textContent, '$3.68');
+  assert.equal(nodes.get('issue-title').textContent, '1 row requires review');
+  const warning = nodes.get('issues').textContent;
+  assert.match(warning, /Row 4.*TRY-101.*invoice_id is duplicated/s);
+  assert.match(warning, /compare/i);
+  assert.match(warning, /earlier valid row.*(?:kept|retained|remains)/i);
+  assert.match(warning, /correct.*ID.*different invoice/i);
+  nodes.get('download').click();
+  assert.deepEqual(core.parseCSV(await blobs[0].text()), [
+    core.fields,
+    ['TRY-100', 'Example, Limited', 'billing@example.com', 'Monthly reporting', '1.00', 'paid'],
+    ['TRY-101', 'Example Studio', 'ops@example.com', 'Reporting', '2.68', 'pending'],
+  ]);
+
+  // A distinct invoice can have its ID corrected, without replacing the retained
+  // pending invoice or changing its rounded amount.
+  nodes.get('csv').value = csv.replace(
+    'TRY-101,Example Studio,ops@example.com,Duplicate',
+    'TRY-102,Example Studio,ops@example.com,Duplicate',
+  );
+  nodes.get('csv').events.input();
+  assert.equal(nodes.get('download').disabled, true);
+  nodes.get('run').click();
+  assert.equal(nodes.get('ready').textContent, '3');
+  assert.equal(nodes.get('total').textContent, '$13.68');
+  assert.equal(nodes.get('issue-title').textContent, '0 rows require review');
+  assert.equal(nodes.get('issues').textContent, 'No exceptions found.');
+  nodes.get('download').click();
+  const corrected = core.parseCSV(await blobs[1].text());
+  assert.deepEqual(corrected[2], ['TRY-101', 'Example Studio', 'ops@example.com', 'Reporting', '2.68', 'pending']);
+  assert.deepEqual(corrected[3], ['TRY-102', 'Example Studio', 'ops@example.com', 'Duplicate invoice', '10.00', 'paid']);
+});
+
+test('duplicate advice follows accepted case-insensitive IDs and preserves other errors', async () => {
+  const {nodes, blobs} = page();
+  nodes.get('csv').value = [
+    'invoice_id,client,email,service,amount,status',
+    ' Repeat ,Example,invalid,Work,999,paid',
+    'repeat,Example,ops@example.com,Work,2.675,pending',
+    ' REPEAT ,Example,invalid,Work,10,paid',
+    'OTHER,Example,ops@example.com,Work,0,paid',
+  ].join('\n');
+  nodes.get('run').click();
+  assert.equal(nodes.get('ready').textContent, '1');
+  assert.equal(nodes.get('total').textContent, '$2.68');
+  assert.equal(nodes.get('issue-title').textContent, '3 rows require review');
+  const warnings = nodes.get('issues').children.map(node => node.textContent);
+  assert.equal(warnings.length, 3);
+  assert.match(warnings[0], /Row 2.*Repeat.*email is missing or invalid/s);
+  assert.doesNotMatch(warnings[0], /earlier valid row|different invoice/i);
+  assert.match(warnings[1], /Row 4.*REPEAT.*email is missing or invalid; invoice_id is duplicated/s);
+  assert.match(warnings[1], /earlier valid row.*(?:kept|retained|remains)/i);
+  assert.match(warnings[1], /compare/i);
+  assert.match(warnings[2], /Row 5.*OTHER.*amount must be greater than zero/s);
+  assert.doesNotMatch(warnings[2], /earlier valid row|different invoice/i);
+  nodes.get('download').click();
+  assert.deepEqual(core.parseCSV(await blobs[0].text()), [
+    core.fields,
+    ['repeat', 'Example', 'ops@example.com', 'Work', '2.68', 'pending'],
+  ]);
+});
+
+test('exception invoice IDs are literal text and cannot trigger duplicate advice', () => {
+  const {nodes} = page();
+  const unsafeID = '<img src=x onerror=alert(1)>';
+  nodes.get('csv').value = [
+    'invoice_id,client,email,service,amount,status',
+    `${unsafeID},Example,ops@example.com,Work,1,paid`,
+    'invoice_id is duplicated,Example,invalid,Work,1,paid',
+  ].join('\n');
+  nodes.get('run').click();
+  const warnings = nodes.get('issues').children.map(node => node.textContent);
+  assert.equal(warnings.length, 2);
+  assert.match(warnings[0], /Row 2.*<img src=x onerror=alert\(1\)>.*invoice_id must be a safe filename/s);
+  assert.match(warnings[1], /Row 3.*invoice_id is duplicated.*email is missing or invalid/s);
+  for (const warning of warnings) {
+    assert.doesNotMatch(warning, /earlier valid row|different invoice/i);
+  }
+  // The helper rejects innerHTML; also ensure no element was created from the ID.
+  function tags(node) { return [node.tagName, ...node.children.flatMap(tags)]; }
+  assert.equal(tags(nodes.get('issues')).includes('img'), false);
+  assert.equal(nodes.get('download').disabled, true);
+});

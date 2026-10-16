@@ -35,11 +35,17 @@
     get('issues').replaceChildren();
     for (const issue of result.issues) {
       const item = element('li');
-      item.append(element('strong', `Row ${issue.row_number}: `), document.createTextNode(issue.reason));
+      const invoice = issue.invoice_id ? ` · Invoice ${issue.invoice_id}` : '';
+      item.append(element('strong', `Row ${issue.row_number}${invoice}: `), document.createTextNode(issue.reason));
+      if (issue.reason.split('; ').includes('invoice_id is duplicated')) {
+        item.append(document.createTextNode(
+          ' The earlier valid row is kept. Compare the records before removing a repeated invoice or correcting its details. Change the ID only if it is a different invoice.'
+        ));
+      }
       get('issues').append(item);
     }
     if (!result.issues.length) get('issues').append(element('li', 'No exceptions found.'));
-    get('issue-title').textContent = `${result.issues.length} row${result.issues.length === 1 ? '' : 's'} require review`;
+    get('issue-title').textContent = `${result.issues.length} ${result.issues.length === 1 ? 'row requires' : 'rows require'} review`;
     download.disabled = !clean.length;
   }
 
