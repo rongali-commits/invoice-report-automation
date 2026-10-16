@@ -24,12 +24,13 @@ The included fictional dataset produces a repeatable result:
 | Measure | Sample run |
 | --- | ---: |
 | Rows processed | 6 |
-| Invoice-ready rows | 4 |
+| Validated invoice rows | 4 |
 | Rows flagged for review | 2 |
 | Validated total | USD 2,290 |
 | PDFs generated | 4 |
 
 These are reproducible sample-run measurements, not claims about a real client engagement.
+Validated rows pass the input checks and may still have pending payment status.
 
 ## What it delivers
 
